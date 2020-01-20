@@ -1,0 +1,48 @@
+version: "2"
+services:
+  apache:
+    build:
+      context: images/php
+      dockerfile: Dockerfile-php5.6
+      args:
+        username: ${USERNAME}
+    container_name: ${APPLICATION}_apachephp
+    ports:
+      - "80:80"
+      - "443:443"
+    links:
+      - mysql
+    volumes:
+      - ${HOST_APP_PATH}:/var/www/html/
+      - ${PLUGIN_PATH}:/var/www/html/modules/${PLUGIN_NAME}/
+    networks:
+      - mynetwork
+
+  mysql:
+    image: mysql:5.7
+    container_name: ${APPLICATION}_mysql
+    ports:
+      - 3307:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - ${DOCKER_DATA_FOLDER}/mysql57:/var/lib/mysql
+    networks:
+      - mynetwork
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: ${APPLICATION}_phpmyadmin
+    links:
+      - mysql
+    ports:
+      - 82:80
+    environment:
+      PMA_ARBITRARY: 1
+      PMA_HOST: mysql
+    networks:
+      - mynetwork
+
+networks:
+  mynetwork:
+    driver: bridge

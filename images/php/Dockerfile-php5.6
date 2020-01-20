@@ -1,0 +1,63 @@
+FROM php:5.6-apache
+
+ARG username
+ENV USERNAME=$username
+
+ENV PHP_PATH=/usr/local/etc/php
+ENV APACHE_PATH=/etc/apache2
+
+# Download script to install PHP extensions and dependencies
+ADD https://raw.githubusercontent.com/mlocati/docker-php-extension-installer/master/install-php-extensions /usr/local/bin/
+
+RUN chmod uga+x /usr/local/bin/install-php-extensions && sync
+
+RUN apt-get update && apt-get install -y \
+        git \
+        curl \
+        libpng-dev \
+        mysql-client \
+        libmcrypt-dev \
+        libfreetype6-dev \
+        libmemcached-dev \
+        libjpeg62-turbo-dev \
+        zlib1g-dev libicu-dev g++ \
+    && install-php-extensions \
+        gd \
+        bz2 \
+        xsl \
+        zip \
+        exif \
+        intl \
+        ldap \
+        soap \
+        apcu \
+        pgsql \
+        redis \
+        mysql \
+        mysqli \
+        mcrypt \
+        bcmath \
+        xdebug \
+        calendar \
+        memcache \
+        memcached \
+        opcache \
+        pdo_mysql \
+        pdo_pgsql \
+    && apt-get -y clean && apt-get autoremove
+
+#set folder owner
+RUN mkdir -p /var/www/html
+RUN useradd -m $USERNAME
+RUN chown -R $USERNAME:$USERNAME /var/www/html
+
+#php conf
+COPY conf/php.ini $PHP_PATH/php.ini-production
+COPY conf/php.ini $PHP_PATH/php.ini-development
+COPY conf/xdebug.ini /etc/php5/mods-available/xdebug.ini
+
+#apache conf
+COPY conf/apache.conf $APACHE_PATH/myapache.conf
+RUN echo "Include $APACHE_PATH/myapache.conf" >> $APACHE_PATH/apache2.conf
+RUN sed -i "s/#LoadModule\ rewrite_module/LoadModule\ rewrite_module/" $APACHE_PATH/apache2.conf
+RUN chown $USERNAME $APACHE_PATH/apache2.conf && chmod u+rwx $APACHE_PATH/apache2.conf
