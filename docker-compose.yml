@@ -1,20 +1,38 @@
 version: "2"
 services:
-  apache:
+  apache17:
     build:
       context: images/php
-      dockerfile: Dockerfile-php5.6
+      dockerfile: Dockerfile-php7.3
       args:
         username: ${USERNAME}
-    container_name: ${APPLICATION}_apachephp
+    container_name: ${APPLICATION}17_apachephp
     ports:
       - "80:80"
       - "443:443"
     links:
       - mysql
     volumes:
-      - ${HOST_APP_PATH}:/var/www/html/
-      - ${PLUGIN_PATH}:/var/www/html/modules/${PLUGIN_NAME}/
+      - ${HOST_PS17_PATH}:/var/www/html:cached
+      - ${PLUGIN_PATH}/:/var/www/html/modules/${PLUGIN_NAME}/
+    networks:
+      - mynetwork
+
+  apache16:
+    build:
+      context: images/php
+      dockerfile: Dockerfile-php7.1
+      args:
+        username: ${USERNAME}
+    container_name: ${APPLICATION}16_apachephp
+    ports:
+      - "81:80"
+      - "444:443"
+    links:
+      - mysql
+    volumes:
+      - ${HOST_PS16_PATH}:/var/www/html:cached
+      - ${PLUGIN_PATH}/:/var/www/html/modules/${PLUGIN_NAME}/
     networks:
       - mynetwork
 
