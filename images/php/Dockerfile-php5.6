@@ -46,6 +46,8 @@ RUN apt-get update && apt-get install -y \
         pdo_pgsql \
     && apt-get -y clean && apt-get autoremove
 
+RUN a2enmod rewrite
+
 #set folder owner
 RUN mkdir -p /var/www/html
 RUN useradd -m $USERNAME
@@ -55,6 +57,7 @@ RUN chown -R $USERNAME:$USERNAME /var/www/html
 COPY conf/php.ini $PHP_PATH/php.ini-production
 COPY conf/php.ini $PHP_PATH/php.ini-development
 COPY conf/xdebug.ini /etc/php5/mods-available/xdebug.ini
+RUN mv $PHP_INI_DIR/php.ini-production $PHP_INI_DIR/php.ini
 
 #apache conf
 COPY conf/apache.conf $APACHE_PATH/myapache.conf

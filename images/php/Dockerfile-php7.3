@@ -5,6 +5,7 @@ ENV USERNAME=$username
 
 ENV PHP_PATH=/usr/local/etc/php
 ENV APACHE_PATH=/etc/apache2
+ENV GLOBAL_PATH=/usr/local/bin
 
 # Download script to install PHP extensions and dependencies
 ADD https://raw.githubusercontent.com/mlocati/docker-php-extension-installer/master/install-php-extensions /usr/local/bin/
@@ -45,25 +46,38 @@ RUN apt-get update && apt-get install -y \
         pdo_pgsql \
     && apt-get -y clean && apt-get autoremove
 
-#fix apcu incompatibility
+#Fix apcu incompatibility
 RUN git clone https://github.com/krakjoe/apcu-bc.git \
     && cd apcu-bc && apt install && phpize && ./configure && make && make install
 
 RUN a2enmod rewrite
 
-#set folder owner
+#Set owner folder
 RUN mkdir -p /var/www/html
 RUN useradd -m $USERNAME
 RUN chown -R $USERNAME:$USERNAME /var/www/html
 
-#php conf
+#PHP conf
 COPY conf/php.ini $PHP_PATH/php.ini-production
 COPY conf/php.ini $PHP_PATH/php.ini-development
-COPY conf/xdebug.ini /etc/php5/mods-available/xdebug.ini
+COPY conf/xdebug.ini $PHP_PATH/mods-available/xdebug.ini
 RUN mv $PHP_INI_DIR/php.ini-production $PHP_INI_DIR/php.ini
 
-#apache conf
+#Apache conf
 COPY conf/apache.conf $APACHE_PATH/myapache.conf
 RUN echo "Include $APACHE_PATH/myapache.conf" >> $APACHE_PATH/apache2.conf
 RUN sed -i "s/#LoadModule\ rewrite_module/LoadModule\ rewrite_module/" $APACHE_PATH/apache2.conf
 RUN chown $USERNAME $APACHE_PATH/apache2.conf && chmod u+rwx $APACHE_PATH/apache2.conf
+
+#Install and configure PHPCS
+RUN curl -L https://squizlabs.github.io/PHP_CodeSniffer/phpcs.phar -o $GLOBAL_PATH/phpcs \
+    && chmod +x $GLOBAL_PATH/phpcs
+
+#Install and configure PHPCBF
+RUN curl -L https://squizlabs.github.io/PHP_CodeSniffer/phpcbf.phar -o $GLOBAL_PATH/phpcbf \
+    && chmod +x $GLOBAL_PATH/phpcbf
+
+#Install and configure PHP-CS-FIXER
+RUN curl -L https://cs.symfony.com/download/php-cs-fixer-v2.phar -o php-cs-fixer \
+    && chmod a+x php-cs-fixer \
+    && mv php-cs-fixer $GLOBAL_PATH/php-cs-fixer

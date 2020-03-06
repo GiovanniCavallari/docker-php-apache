@@ -13,7 +13,7 @@ services:
     links:
       - mysql
     volumes:
-      - ${HOST_PS17_PATH}:/var/www/html:cached
+      - prestashop17-sync:/var/www/html:nocopy
       - ${PLUGIN_PATH}/:/var/www/html/modules/${PLUGIN_NAME}/
     networks:
       - mynetwork
@@ -31,7 +31,7 @@ services:
     links:
       - mysql
     volumes:
-      - ${HOST_PS16_PATH}:/var/www/html:cached
+      - prestashop16-sync:/var/www/html:nocopy
       - ${PLUGIN_PATH}/:/var/www/html/modules/${PLUGIN_NAME}/
     networks:
       - mynetwork
